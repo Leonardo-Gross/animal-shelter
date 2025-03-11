@@ -2,17 +2,16 @@
 import Modal from './Modal.vue'
 import { useModalStore } from '../../stores/modalStore'
 import { useRouter } from 'vue-router'
+import { useNavigation } from '../../router/index'
 
-const router = useRouter()
-const goToLoginView = () => {
-  router.push('/')
-}
 const modalStore = useModalStore()
 
 function clearLogin() {
   localStorage.removeItem('email')
   localStorage.removeItem('password')
 }
+
+const { goToLoginView } = useNavigation()
 </script>
 
 <template>

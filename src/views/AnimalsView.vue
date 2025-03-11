@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import Modal from '../components/Animals/Modal.vue'
 import { useModalStore } from '../stores/modalStore'
 import LogoutModal from '../components/Animals/LogoutModal.vue'
+import { useNavigation } from '../router/index'
 
 const modalStore = useModalStore()
 
@@ -64,6 +65,15 @@ const deselectAnimal = () => {
 const selectAnimal = (animal: Animal) => {
   selectedAnimal.value = animal
 }
+
+const { goToLoginView } = useNavigation()
+
+const adoptAnimal = () => {
+  window.alert(
+    `Congratulations! You have adopted ${selectedAnimal.value.name}, it is a ${selectedAnimal.value.species}.`,
+  )
+  goToLoginView()
+}
 </script>
 
 <template>
@@ -109,6 +119,7 @@ const selectAnimal = (animal: Animal) => {
       />
       <div class="flex justify-center">
         <button
+          @click="adoptAnimal"
           class="px-2 bg-gray-300 rounded-md mt-5 text-xl cursor-pointer hover:bg-emerald-600"
         >
           Adopt
