@@ -1,64 +1,71 @@
 <script setup lang="ts">
-import AnimalsView from './AnimalsView.vue'
-import RegisterModal from '../components/Animals/RegisterModal.vue'
 import { ref } from 'vue'
+import { useToast } from 'primevue/usetoast'
+import { useNavigation } from '../router/index'
 
-import { useRouter } from 'vue-router'
-
-const router = useRouter()
-const goToAnimalsView = () => {
-  router.push('animals')
-}
+const { goToAnimalsView, goToRegisterView } = useNavigation()
 
 const email = ref('')
 const password = ref('')
+const toast = useToast()
 
-const login = () => {
-  console.log('Login', 'Email:', email.value, 'Passowrd:', password.value)
+const showLoginAlert = () => {
+  toast.add({
+    severity: 'error',
+    summary: 'Error!',
+    detail: 'E-mail or Password does not match!',
+    life: 3000,
+  })
+}
+
+const handleLogin = () => {
   if (
     email.value === localStorage.getItem('email') &&
     password.value === localStorage.getItem('password')
   ) {
+    console.log('Login', 'Email:', email.value, 'Passowrd:', password.value)
     goToAnimalsView()
   } else {
-    alert("Login Failed! Email or Password doesn't match.")
+    showLoginAlert()
   }
 }
 </script>
-
 <template>
-  <div class="flex items-center justify-center bg-white">
-    <div class="w-full max-w-md p-6 bg-gray-200 rounded-2xl shadow-lg">
-      <h2 class="text-2xl font-semibold text-center text-green-600 mb-6">Login - Animal Shelter</h2>
-      <form @submit.prevent="login">
-        <div class="mb-4">
-          <label class="block text-gray-700">Email</label>
-          <input
-            v-model="email"
-            type="email"
-            class="w-full px-4 py-2 border rounded-lg focus:ring focus:ring-blue-300"
-            required
-          />
-        </div>
-        <div class="mb-4">
-          <label class="block text-gray-700">Password</label>
-          <input
-            v-model="password"
-            type="password"
-            class="w-full px-4 py-2 border rounded-lg focus:ring focus:ring-blue-300"
-            required
-          />
-        </div>
-        <button
-          type="submit"
-          class="w-full mb-4 bg-green-500 text-white py-2 rounded-lg hover:bg-blue-600 transition"
-        >
-          Sign-in
-        </button>
-      </form>
-      <div class="flex items-center justify-center">
-        <p class="inline text-sm text-gray-600 mr-2">Don't have an account yet?</p>
-        <RegisterModal />
+  <div class="flex items-center justify-center h-screen w-full bg-gray-100">
+    <Toast />
+    <div class="w-full max-w-md p-8 shadow-lg bg-white rounded-lg">
+      <h1 class="text-2xl font-semibold mb-5 text-center text-gray-800">Login - Animal Shelter</h1>
+      <div class="flex justify-center">
+        <form @submit.prevent="handleLogin" class="flex flex-col gap-4 w-2/3">
+          <div>
+            <InputText
+              name="email"
+              placeholder="E-mail"
+              v-model="email"
+              class="w-full p-2 border rounded !bg-white !text-black"
+            />
+          </div>
+          <div>
+            <InputText
+              type="password"
+              placeholder="Password"
+              v-model="password"
+              class="w-full p-2 border rounded !bg-white !text-black"
+            />
+          </div>
+          <div class="flex justify-center">
+            <Button type="submit" severity="primary" label="Sign-in" class="w-1/2" />
+          </div>
+        </form>
+      </div>
+      <div class="flex flex-col items-center mt-4">
+        <p class="text-sm text-gray-600">Don't have an account yet?</p>
+        <Button
+          severity="secondary"
+          label="Register here"
+          @click="goToRegisterView()"
+          class="mt-2"
+        />
       </div>
     </div>
   </div>

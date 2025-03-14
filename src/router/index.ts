@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '../views/LoginView.vue'
 import AnimalsView from '../views/AnimalsView.vue'
+import RegisterView from '../views/RegisterView.vue'
 import { useRouter } from 'vue-router'
 
 const router = createRouter({
@@ -16,6 +17,12 @@ const router = createRouter({
       name: 'animals',
       component: AnimalsView,
     },
+
+    {
+      path: '/register',
+      name: 'register',
+      component: RegisterView,
+    },
   ],
 })
 
@@ -26,7 +33,15 @@ export function useNavigation() {
     router.push('/')
   }
 
-  return { goToLoginView }
+  const goToRegisterView = () => {
+    router.push('/register')
+  }
+
+  const goToAnimalsView = () => {
+    router.push('/animals')
+  }
+
+  return { goToLoginView, goToRegisterView, goToAnimalsView }
 }
 
 export default router

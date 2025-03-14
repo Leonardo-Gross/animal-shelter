@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import Modal from '../components/Animals/Modal.vue'
-import { useModalStore } from '../stores/modalStore'
-import LogoutModal from '../components/Animals/LogoutModal.vue'
+import { onMounted, ref } from 'vue'
+import { useConfirm } from 'primevue/useconfirm'
+import ConfirmPopup from 'primevue/confirmpopup'
+import Toast from 'primevue/toast'
+import Image from 'primevue/image'
+import { MenuItem } from 'primevue/menuitem'
 import { useNavigation } from '../router/index'
-
-const modalStore = useModalStore()
 
 interface Animal {
   id: number
@@ -14,7 +14,7 @@ interface Animal {
   image: string
 }
 
-const animals = ref<Animal[]>([
+const defaultAnimals: Animal[] = [
   {
     id: 1,
     name: 'Max',
@@ -55,75 +55,189 @@ const animals = ref<Animal[]>([
     image:
       'https://static.foxnews.com/foxnews.com/content/uploads/2018/09/Garfiel20look20alike.jpg',
   },
-])
+]
 
-const selectedAnimal = ref<Animal | null>(null)
-const deselectAnimal = () => {
-  selectedAnimal.value = null
+const animalImage = ref('')
+const animalName = ref('')
+const animalSpecie = ref('')
+
+const animals = ref<Animal[]>([])
+const confirm = useConfirm()
+
+const saveAnimals = () => {
+  localStorage.setItem('animals', JSON.stringify(animals.value))
 }
 
-const selectAnimal = (animal: Animal) => {
-  selectedAnimal.value = animal
+const loadAnimals = () => {
+  const storedAnimals = localStorage.getItem('animals')
+  if (storedAnimals) {
+    animals.value = JSON.parse(storedAnimals)
+  } else {
+    animals.value = defaultAnimals
+    saveAnimals()
+  }
 }
 
 const { goToLoginView } = useNavigation()
 
-const adoptAnimal = () => {
-  window.alert(
-    `Congratulations! You have adopted ${selectedAnimal.value.name}, it is a ${selectedAnimal.value.species}.`,
-  )
-  goToLoginView()
+const showAddNewAnimalModal = ref(false)
+const showRemoveAnimalModal = ref(false)
+
+const handleMenuClick = (label: string, event: Event) => {
+  console.log('Item clicado:', label)
+
+  if (label === 'Sign-Out') {
+    confirm.require({
+      target: event.currentTarget as HTMLElement,
+      group: 'templating',
+      message: 'Tem certeza que deseja sair?',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sim',
+      rejectLabel: 'Cancelar',
+      accept: () => {
+        localStorage.clear()
+        goToLoginView()
+      },
+    })
+  }
+  if (label === 'Home') {
+    loadAnimals()
+  }
+  if (label === 'Add New Animal') {
+    showAddNewAnimalModal.value = true
+  }
+  if (label === 'Remove Animal') {
+    showRemoveAnimalModal.value = true
+  }
 }
+
+const addNewAnimal = () => {
+  const newAnimal: Animal = {
+    id: animals.value.length + 1,
+    name: animalName.value,
+    species: animalSpecie.value,
+    image: animalImage.value,
+  }
+
+  animals.value.push(newAnimal)
+  saveAnimals() // Salva no localStorage
+  showAddNewAnimalModal.value = false
+}
+
+const removeAnimal = () => {
+  animals.value = animals.value.filter(
+    (animal) => animal.name !== animalName.value || animal.species !== animalSpecie.value,
+  )
+  saveAnimals()
+  showRemoveAnimalModal.value = false // Fecha o modal após remover
+}
+
+const items = ref<MenuItem[]>([
+  {
+    label: 'Home',
+    icon: 'pi pi-home',
+    command: (event) => handleMenuClick('Home', event.originalEvent),
+  },
+  {
+    label: 'Edit Animals',
+    icon: 'pi pi-pen-to-square',
+    items: [
+      {
+        label: 'Add New Animal',
+        icon: 'pi pi-plus',
+        command: (event) => handleMenuClick('Add New Animal', event.originalEvent),
+      },
+      {
+        label: 'Remove Animal',
+        icon: 'pi pi-minus',
+        command: (event) => handleMenuClick('Remove Animal', event.originalEvent),
+      },
+    ],
+  },
+  {
+    label: 'Configurations',
+    icon: 'pi pi-cog',
+    items: [
+      {
+        label: 'Profile',
+        icon: 'pi pi-user',
+        command: (event) => handleMenuClick('Profile', event.originalEvent),
+      },
+      {
+        label: 'Security',
+        icon: 'pi pi-lock',
+        command: (event) => handleMenuClick('Security', event.originalEvent),
+      },
+    ],
+  },
+  {
+    label: 'Sign-Out',
+    icon: 'pi pi-sign-out',
+    command: (event) => handleMenuClick('Sign-Out', event.originalEvent),
+  },
+])
+
+onMounted(() => {
+  loadAnimals()
+})
 </script>
 
 <template>
-  <div class="container w-500 mx-auto p-4">
-    <div class="grid grid-cols-3 items-center pb-5">
-      <h1 class="text-2xl font-bold text-center col-start-2">Animals to Shelter</h1>
-      <div class="flex justify-end">
-        <LogoutModal />
-      </div>
+  <div class="h-screen w-1/6 fixed left-0 top-0 bg-white shadow-lg p-2">
+    <Toast />
+    <PanelMenu
+      :model="items"
+      class="h-full justify-center"
+      :pt="{
+        root: 'h-full',
+        panel: 'mb-2 bg-gray-800 rounded-lg overflow-hidden',
+        header:
+          'bg-gray-700 text-white font-semibold py-3 px-4 cursor-pointer hover:bg-gray-600 transition',
+        content: 'bg-gray-800',
+        menuitem: 'px-4 py-2 hover:bg-gray-700 transition rounded-lg',
+        submenu: 'pl-4',
+        icon: 'text-gray-300',
+        label: 'text-gray-200',
+      }"
+    />
+  </div>
+  <Dialog v-model:visible="showAddNewAnimalModal" header="Add New Animal" modal>
+    <form @submit.prevent="addNewAnimal">
+      <InputText name="image" placeholder="Animal Image Link" v-model="animalImage" />
+      <InputText name="name" placeholder="Animal Name" v-model="animalName" />
+      <InputText name="specie" placeholder="Animal Specie" v-model="animalSpecie" />
+      <Button label="Add Animal" type="submit" />
+    </form>
+  </Dialog>
+  <Dialog v-model:visible="showRemoveAnimalModal" header="Remove Animal" modal>
+    <form @submit.prevent="removeAnimal">
+      <InputText name="name" placeholder="Animal Name" v-model="animalName" />
+      <InputText name="specie" placeholder="Animal Specie" v-model="animalSpecie" />
+      <Button label="Remove Animal" type="submit" />
+    </form>
+  </Dialog>
+  <ConfirmPopup group="templating" />
+
+  <div class="ml-64 mr-10 p-4">
+    <div class="flex items-center justify-between w-full">
+      <h1 class="text-2xl font-semibold text-black">Animals to Shelter</h1>
+      <i class="pi pi-user text-black text-2xl cursor-pointer"></i>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div
         v-for="animal in animals"
         :key="animal.id"
-        class="border rounded-lg p-4 shadow-lg cursor-pointer hover:bg-gray-100"
-        @click="selectAnimal(animal)"
+        class="border rounded-lg p-4 shadow-lg cursor-pointer hover:bg-gray-300"
       >
-        <img :src="animal.image" :alt="animal.name" class="w-full h-40 object-cover rounded-lg" />
-        <h2 class="text-xl font-semibold mt-2">{{ animal.name }}</h2>
+        <Image
+          :src="animal.image"
+          :alt="animal.name"
+          preview
+          class="w-full h-40 rounded-lg overflow-hidden"
+          :pt="{ image: 'w-full h-full object-cover rounded-lg' }"
+        />
+        <h2 class="text-xl font-semibold mt-2 text-gray-700">{{ animal.name }}</h2>
         <p class="text-gray-600">{{ animal.species }}</p>
-      </div>
-    </div>
-
-    <div
-      v-if="selectedAnimal"
-      class="w-md mx-auto mt-6 p-4 border rounded-lg shadow-md bg-white text-center"
-    >
-      <div class="grid grid-cols-3 items-center w-full">
-        <h2 class="col-start-2 text-xl font-bold text-center">You selected:</h2>
-        <button
-          class="col-start-3 justify-self-end bg-none border-none text-xl cursor-pointer"
-          @click="deselectAnimal"
-        >
-          X
-        </button>
-      </div>
-
-      <p class="text-lg">{{ selectedAnimal.name }} - {{ selectedAnimal.species }}</p>
-      <img
-        :src="selectedAnimal.image"
-        :alt="selectedAnimal.name"
-        class="w-40 h-40 object-cover mx-auto mt-2 rounded-lg"
-      />
-      <div class="flex justify-center">
-        <button
-          @click="adoptAnimal"
-          class="px-2 bg-gray-300 rounded-md mt-5 text-xl cursor-pointer hover:bg-emerald-600"
-        >
-          Adopt
-        </button>
       </div>
     </div>
   </div>
