@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed, nextTick } from 'vue'
 import { useConfirm } from 'primevue/useconfirm'
 import ConfirmPopup from 'primevue/confirmpopup'
 import Toast from 'primevue/toast'
@@ -61,6 +61,40 @@ const animalImage = ref('')
 const animalName = ref('')
 const animalSpecie = ref('')
 
+const selectedAnimal = computed(() => {
+  const animal =
+    selectedAnimalId.value !== null
+      ? animals.value.find((animal) => animal.id === Number(selectedAnimalId.value))
+      : null
+  console.log(animal)
+  return animal
+})
+
+const selectedAnimalId = ref<string | null>(null)
+
+const setAnimalSelectedId = async (id: string) => {
+  if (selectedAnimalId.value === id && isSideInfoAnimalPageOpen.value) {
+    // Se o mesmo animal foi clicado e a sidebar já está aberta, fecha-a
+    closeSideInfoAnimalPage()
+    return
+  }
+
+  closeSideInfoAnimalPage() // Fecha a sidebar antes de abrir com o novo animal
+  await nextTick() // Aguarda a atualização do DOM
+  selectedAnimalId.value = id // Define o novo ID
+  isSideInfoAnimalPageOpen.value = true // Abre a sidebar
+}
+
+const isSideInfoAnimalPageOpen = ref(false)
+
+const closeSideInfoAnimalPage = () => {
+  isSideInfoAnimalPageOpen.value = false
+}
+
+const handleAnimalClick = async (id: string) => {
+  await setAnimalSelectedId(id)
+}
+
 const animals = ref<Animal[]>([])
 const confirm = useConfirm()
 
@@ -81,7 +115,6 @@ const loadAnimals = () => {
 const { goToLoginView } = useNavigation()
 
 const showAddNewAnimalModal = ref(false)
-const showRemoveAnimalModal = ref(false)
 
 const handleMenuClick = (label: string, event: Event) => {
   console.log('Item clicado:', label)
@@ -103,33 +136,26 @@ const handleMenuClick = (label: string, event: Event) => {
   if (label === 'Home') {
     loadAnimals()
   }
-  if (label === 'Add New Animal') {
-    showAddNewAnimalModal.value = true
-  }
-  if (label === 'Remove Animal') {
-    showRemoveAnimalModal.value = true
-  }
 }
 
 const addNewAnimal = () => {
+  const maxId = animals.value.length > 0 ? Math.max(...animals.value.map((a) => a.id)) : 0
+
   const newAnimal: Animal = {
-    id: animals.value.length + 1,
+    id: maxId + 1,
     name: animalName.value,
     species: animalSpecie.value,
     image: animalImage.value,
   }
 
   animals.value.push(newAnimal)
-  saveAnimals() // Salva no localStorage
+  saveAnimals()
   showAddNewAnimalModal.value = false
 }
 
-const removeAnimal = () => {
-  animals.value = animals.value.filter(
-    (animal) => animal.name !== animalName.value || animal.species !== animalSpecie.value,
-  )
+const removeAnimal = (id) => {
+  animals.value = animals.value.filter((animal) => animal.id !== id)
   saveAnimals()
-  showRemoveAnimalModal.value = false // Fecha o modal após remover
 }
 
 const items = ref<MenuItem[]>([
@@ -137,22 +163,6 @@ const items = ref<MenuItem[]>([
     label: 'Home',
     icon: 'pi pi-home',
     command: (event) => handleMenuClick('Home', event.originalEvent),
-  },
-  {
-    label: 'Edit Animals',
-    icon: 'pi pi-pen-to-square',
-    items: [
-      {
-        label: 'Add New Animal',
-        icon: 'pi pi-plus',
-        command: (event) => handleMenuClick('Add New Animal', event.originalEvent),
-      },
-      {
-        label: 'Remove Animal',
-        icon: 'pi pi-minus',
-        command: (event) => handleMenuClick('Remove Animal', event.originalEvent),
-      },
-    ],
   },
   {
     label: 'Configurations',
@@ -201,33 +211,58 @@ onMounted(() => {
       }"
     />
   </div>
-  <Dialog v-model:visible="showAddNewAnimalModal" header="Add New Animal" modal>
-    <form @submit.prevent="addNewAnimal">
-      <InputText name="image" placeholder="Animal Image Link" v-model="animalImage" />
-      <InputText name="name" placeholder="Animal Name" v-model="animalName" />
-      <InputText name="specie" placeholder="Animal Specie" v-model="animalSpecie" />
-      <Button label="Add Animal" type="submit" />
-    </form>
-  </Dialog>
-  <Dialog v-model:visible="showRemoveAnimalModal" header="Remove Animal" modal>
-    <form @submit.prevent="removeAnimal">
-      <InputText name="name" placeholder="Animal Name" v-model="animalName" />
-      <InputText name="specie" placeholder="Animal Specie" v-model="animalSpecie" />
-      <Button label="Remove Animal" type="submit" />
-    </form>
-  </Dialog>
   <ConfirmPopup group="templating" />
-
   <div class="ml-64 mr-10 p-4">
     <div class="flex items-center justify-between w-full">
       <h1 class="text-2xl font-semibold text-black">Animals to Shelter</h1>
-      <i class="pi pi-user text-black text-2xl cursor-pointer"></i>
+      <i
+        @click="showAddNewAnimalModal = true"
+        class="pi pi-plus text-black text-2xl cursor-pointer"
+      >
+        <Dialog
+          v-model:visible="showAddNewAnimalModal"
+          modal
+          class="!bg-gray-300 !text-xl !text-black !font-semibold"
+          :closable="false"
+        >
+          <template #header>
+            <div class="flex justify-between w-full items-center">
+              <span class="text-xl font-bold">Add New Animal</span>
+              <i
+                @click="showAddNewAnimalModal = false"
+                class="pi pi-times p-1 cursor-pointer hover:bg-gray-700 rounded-full"
+              ></i>
+            </div>
+          </template>
+          <form @submit.prevent="addNewAnimal">
+            <InputText
+              class="!bg-gray-700"
+              name="image"
+              placeholder="Animal Image Link"
+              v-model="animalImage"
+            />
+            <InputText
+              class="!bg-gray-700"
+              name="name"
+              placeholder="Animal Name"
+              v-model="animalName"
+            />
+            <InputText
+              class="!bg-gray-700"
+              name="specie"
+              placeholder="Animal Specie"
+              v-model="animalSpecie"
+            />
+            <Button label="Add Animal" type="submit" />
+          </form>
+        </Dialog>
+      </i>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div
         v-for="animal in animals"
         :key="animal.id"
-        class="border rounded-lg p-4 shadow-lg cursor-pointer hover:bg-gray-300"
+        class="border rounded-lg p-4 shadow-lg cursor-pointer"
       >
         <Image
           :src="animal.image"
@@ -236,9 +271,53 @@ onMounted(() => {
           class="w-full h-40 rounded-lg overflow-hidden"
           :pt="{ image: 'w-full h-full object-cover rounded-lg' }"
         />
-        <h2 class="text-xl font-semibold mt-2 text-gray-700">{{ animal.name }}</h2>
-        <p class="text-gray-600">{{ animal.species }}</p>
+        <div class="flex items-center justify-between mt-2">
+          <h2 class="text-xl font-semibold text-gray-700">{{ animal.name }}</h2>
+          <i
+            @click="removeAnimal(animal.id)"
+            class="pi pi-minus text-black text-2xl cursor-pointer hover:bg-gray-300 rounded-sm"
+          ></i>
+        </div>
+        <div class="flex items-center justify-between mt-2">
+          <p class="text-gray-600">{{ animal.species }}</p>
+          <i
+            @click="handleAnimalClick(animal.id.toString())"
+            class="pi pi-pen-to-square text-black text-2xl cursor-pointer"
+          ></i>
+        </div>
       </div>
+    </div>
+  </div>
+  <div
+    v-if="isSideInfoAnimalPageOpen"
+    class="fixed top-0 right-0 w-1/3 h-full bg-gray-300 shadow-lg p-4 transition-transform"
+  >
+    <h2 class="text-xl text-black font-bold">Animal Info</h2>
+    <i
+      @click="closeSideInfoAnimalPage()"
+      class="pi pi-times absolute top-2 right-2 text-black cursor-pointer"
+    ></i>
+
+    <div class="text-black" v-if="selectedAnimal">
+      <div class="flex justify-between items-center mt-4 font-semibold text-lg">
+        <p>{{ selectedAnimal.name }}</p>
+        <p>Id: {{ selectedAnimal.id }}</p>
+      </div>
+      <div class="flex justify-between items-center mt-4 font-semibold text-lg">
+        <p>Weight: -</p>
+        <p>Age: -</p>
+      </div>
+      <h2 class="mt-5 font-semibold text-xl">Aditional informations:</h2>
+      <p>
+        Lorem ipsum dolor sit amet consectetur adipisicing elit. Ullam quibusdam atque illum ipsam,
+        error laudantium exercitationem officia dolor itaque vel, deserunt eaque minima optio sed
+        nostrum asperiores quam temporibus! Dolore?
+      </p>
+      <p>
+        Lorem ipsum dolor sit amet consectetur adipisicing elit. Ullam quibusdam atque illum ipsam,
+        error laudantium exercitationem officia dolor itaque vel, deserunt eaque minima optio sed
+        nostrum asperiores quam temporibus! Dolore?
+      </p>
     </div>
   </div>
 </template>
