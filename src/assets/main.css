@@ -8,5 +8,37 @@ body,
   width: 100vw;
   height: 100vh;
   background-color: white !important;
-  overflow-x: hidden; /* Evita rolagem horizontal */
+  overflow-x: hidden;
+}
+
+::v-deep .p-confirmpopup .p-component {
+  background-color: #2d3748 !important;
+  color: #ffffff !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+}
+
+::v-deep .p-confirmpopup-content {
+  background-color: #4a5568 !important;
+  color: #ffffff !important;
+  font-size: 18px !important;
+  font-weight: bold !important;
+}
+
+::v-deep .p-confirmpopup-footer {
+  background-color: #4a5568 !important;
+  color: #ffffff !important;
+  text-align: center !important;
+}
+
+::v-deep .p-button .p-component .p-button-sm .p-confirmpopup-accept-button {
+  background-color: #38a169 !important;
+  color: white !important;
+  border-radius: 4px !important;
+  padding: 10px 20px !important;
+}
+
+::v-deep p-confirmpopup-footer .p-button .p-component .p-button-sm .p-confirmpopup-reject-button {
+  background-color: #e53e3e !important;
+  border-radius: 4px !important;
 }

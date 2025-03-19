@@ -64,9 +64,11 @@ const handleLogin = () => {
           severity="secondary"
           label="Register here"
           @click="goToRegisterView()"
-          class="mt-2"
+          class="!bg-gray-500 mt-2 !border-none"
         />
       </div>
     </div>
   </div>
 </template>
+
+<style scoped></style>

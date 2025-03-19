@@ -22,6 +22,7 @@ declare module 'vue' {
     InputGroup: typeof import('primevue/inputgroup')['default']
     InputGroupAddon: typeof import('primevue/inputgroupaddon')['default']
     InputMask: typeof import('primevue/inputmask')['default']
+    InputNumber: typeof import('primevue/inputnumber')['default']
     InputText: typeof import('primevue/inputtext')['default']
     LogoutModal: typeof import('./src/components/Animals/LogoutModal.vue')['default']
     Menubar: typeof import('primevue/menubar')['default']
@@ -32,6 +33,7 @@ declare module 'vue' {
     RegisterModal: typeof import('./src/components/Animals/RegisterModal.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    Textarea: typeof import('primevue/textarea')['default']
     Toast: typeof import('primevue/toast')['default']
   }
 }
