@@ -291,25 +291,40 @@ onMounted(() => {
               </div>
             </template>
             <form @submit.prevent="addNewAnimal">
-              <InputText
-                class="!bg-gray-500"
-                name="image"
-                placeholder="Animal Image Link"
-                v-model="animalImage"
-              />
-              <InputText
-                class="!bg-gray-500"
-                name="name"
-                placeholder="Animal Name"
-                v-model="animalName"
-              />
-              <InputText
-                class="!bg-gray-500"
-                name="specie"
-                placeholder="Animal Specie"
-                v-model="animalSpecie"
-              />
-              <Button label="Add Animal" type="submit" />
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="flex flex-col gap-4">
+                  <InputText
+                    class="!bg-gray-500"
+                    name="image"
+                    placeholder="Animal Image Link"
+                    v-model="animalImage"
+                  />
+                  <InputText
+                    class="!bg-gray-500"
+                    name="name"
+                    placeholder="Animal Name"
+                    v-model="animalName"
+                  />
+                </div>
+
+                <div class="flex flex-col gap-4">
+                  <InputText
+                    class="!bg-gray-500"
+                    name="specie"
+                    placeholder="Animal Specie"
+                    v-model="animalSpecie"
+                  />
+                  <InputText
+                    class="!bg-gray-500"
+                    name="birth"
+                    placeholder="Animal Birth Date"
+                    v-model="animalBirth"
+                  />
+                </div>
+              </div>
+              <div class="flex justify-end mt-4">
+                <Button label="Add Animal" type="submit" />
+              </div>
             </form>
           </Dialog>
         </i>
